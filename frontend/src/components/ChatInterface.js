@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "./ChatInterface.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const ChatInterface = ({ currentDocument }) => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
@@ -50,7 +52,7 @@ const ChatInterface = ({ currentDocument }) => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("/api/chat", {
+      const response = await axios.post(`${API_BASE_URL}/api/chat`, {
         message: userMessage.content,
         documentId: currentDocument.documentId
       });

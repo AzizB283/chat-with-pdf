@@ -3,6 +3,8 @@ import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import "./FileUpload.css";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const FileUpload = ({ onDocumentUploaded }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -31,12 +33,16 @@ const FileUpload = ({ onDocumentUploaded }) => {
         const formData = new FormData();
         formData.append("pdf", file);
 
-        const response = await axios.post("/api/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          },
-          timeout: 300000
-        });
+        const response = await axios.post(
+          `${API_BASE_URL}/api/upload`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data"
+            },
+            timeout: 300000
+          }
+        );
 
         if (response.data.success) {
           // ✅ CORRECT: Pass the file directly as per official docs
