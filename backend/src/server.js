@@ -21,7 +21,6 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Add better error handling
   handler: (req, res) => {
     res.status(429).json({
       error: "Too many requests, please try again later.",
@@ -93,7 +92,6 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
     // Extract text from PDF
     const extractedText = await pdfService.extractTextFromPDF(filePath);
 
-    // ✅ Clean up uploaded file BEFORE vector processing
     fs.unlinkSync(filePath);
     filePath = null; // Mark as cleaned up
 
@@ -113,7 +111,6 @@ app.post("/api/upload", upload.single("pdf"), async (req, res) => {
   } catch (error) {
     console.error("Upload error:", error);
 
-    // ✅ Only cleanup if file still exists
     if (filePath && fs.existsSync(filePath)) {
       try {
         fs.unlinkSync(filePath);

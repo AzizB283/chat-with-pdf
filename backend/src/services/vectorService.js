@@ -9,7 +9,7 @@ class VectorService {
       apiKey: process.env.PINECONE_API_KEY
     });
 
-    // ✅ Use Gemini instead of OpenAI
+    // Use Gemini instead of OpenAI
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     this.embeddingModel = this.genAI.getGenerativeModel({
       model: "embedding-001"
@@ -29,7 +29,7 @@ class VectorService {
         console.log(`Creating index: ${this.indexName}`);
         await this.pinecone.createIndex({
           name: this.indexName,
-          dimension: 768, // ✅ Gemini embedding dimension
+          dimension: 768,
           metric: "cosine",
           spec: {
             serverless: {
@@ -48,7 +48,7 @@ class VectorService {
     }
   }
 
-  // ✅ Use Gemini for embeddings
+  // Use Gemini for embeddings
   async getEmbedding(text) {
     try {
       const result = await this.embeddingModel.embedContent(text);
@@ -56,13 +56,12 @@ class VectorService {
     } catch (error) {
       console.error("Error creating Gemini embedding:", error);
 
-      // ✅ Fallback: Simple text-to-vector conversion (basic but fast)
-      // This is a simple hash-based embedding as emergency fallback
+      // Fallback: Simple text-to-vector conversion
       return this.createSimpleEmbedding(text);
     }
   }
 
-  // ✅ Emergency fallback embedding (very basic)
+  // Emergency fallback embedding (very basic)
   createSimpleEmbedding(text) {
     const embedding = new Array(768).fill(0);
     const words = text.toLowerCase().split(/\s+/).slice(0, 100);
@@ -89,7 +88,7 @@ class VectorService {
     return Math.abs(hash);
   }
 
-  // ✅ Optimized batch processing
+  // Optimized batch processing
   async processAndStoreDocument(fileName, text) {
     try {
       await this.ensureIndexExists();
@@ -103,7 +102,7 @@ class VectorService {
 
       const index = this.pinecone.index(this.indexName);
 
-      // ✅ Larger batches with concurrency control
+      // Larger batches with concurrency control
       const batchSize = 50; // Increased batch size
       const concurrentBatches = 3; // Process multiple batches concurrently
 
@@ -149,7 +148,7 @@ class VectorService {
     }
   }
 
-  // ✅ Process batch with concurrent embedding generation
+  // Process batch with concurrent embedding generation
   async processBatch(batch, documentId, fileName, startIndex) {
     const vectors = [];
 

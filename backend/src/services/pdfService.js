@@ -7,8 +7,8 @@ class PDFService {
       const dataBuffer = fs.readFileSync(filePath);
 
       const options = {
-        max: 0, // No page limit
-        normalizeWhitespace: true, // ✅ Enable normalization
+        max: 0,
+        normalizeWhitespace: true,
         disableCombineTextItems: false
       };
 
@@ -21,17 +21,16 @@ class PDFService {
 
         const recoveryOptions = {
           ...options,
-          max: 200 // ✅ Limit pages for large books
+          max: 200
         };
 
         pdfData = await pdfParse(dataBuffer, recoveryOptions);
       }
 
-      // ✅ Better text cleaning
       const cleanText = pdfData.text
         .replace(/\s+/g, " ")
         .replace(/\n\s*\n/g, "\n")
-        .replace(/[^\x20-\x7E\n]/g, "") // Remove non-printable characters
+        .replace(/[^\x20-\x7E\n]/g, "")
         .trim();
 
       if (!cleanText || cleanText.length < 10) {
@@ -50,7 +49,7 @@ class PDFService {
     }
   }
 
-  // ✅ Optimized chunking strategy
+  // split text
   splitTextIntoChunks(text, maxChunkSize = 800, overlap = 100) {
     const chunks = [];
     const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);

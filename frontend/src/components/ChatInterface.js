@@ -125,8 +125,7 @@ const ChatInterface = ({ currentDocument }) => {
                   </div>
                   <div className="doc-stats">
                     <span className="stat-item">
-                      📊 {message.documentInfo.textLength?.toLocaleString()}{" "}
-                      chars
+                      {message.documentInfo.textLength?.toLocaleString()} chars
                     </span>
                   </div>
                 </div>
@@ -137,7 +136,6 @@ const ChatInterface = ({ currentDocument }) => {
               {message.sources && message.sources.length > 0 && (
                 <div className="message-sources">
                   <div className="sources-header">
-                    <span className="sources-icon">📚</span>
                     <span>Source References ({message.sources.length})</span>
                   </div>
 

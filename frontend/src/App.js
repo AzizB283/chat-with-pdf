@@ -11,7 +11,6 @@ function App() {
     setCurrentDocument(documentData);
   };
 
-  // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
       if (currentDocument?.pdfUrl) {
@@ -23,7 +22,6 @@ function App() {
   return (
     <div className="App">
       {!currentDocument ? (
-        // ✅ Show upload interface when no document
         <div className="upload-container">
           <header className="header">
             <h1>📚 NotebookLM Clone</h1>
@@ -34,7 +32,6 @@ function App() {
           </div>
         </div>
       ) : (
-        // ✅ Show two-column layout when document is loaded
         <div className="app-layout">
           <div className="pdf-column">
             <PDFViewer

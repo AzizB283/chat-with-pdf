@@ -153,13 +153,13 @@ const FileUpload = ({ onDocumentUploaded }) => {
               <h3 className="document-title">{uploadedDocument.fileName}</h3>
               <div className="document-meta">
                 <span className="meta-item">
-                  📊 {uploadedDocument.textLength?.toLocaleString()} characters
+                  {uploadedDocument.textLength?.toLocaleString()} characters
                 </span>
                 <span className="meta-item">
-                  💾 {formatFileSize(uploadedDocument.fileSize)}
+                  {formatFileSize(uploadedDocument.fileSize)}
                 </span>
                 <span className="meta-item">
-                  🕒 {formatDate(uploadedDocument.uploadedAt)}
+                  {formatDate(uploadedDocument.uploadedAt)}
                 </span>
               </div>
             </div>
@@ -174,7 +174,7 @@ const FileUpload = ({ onDocumentUploaded }) => {
 
           <div className="document-actions">
             <button onClick={handleNewUpload} className="new-upload-btn">
-              📎 Upload New PDF
+              Upload New PDF
             </button>
           </div>
         </div>

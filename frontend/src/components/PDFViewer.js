@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./PDFViewer.css";
 
 const PDFViewer = ({ pdfFile, fileName }) => {
@@ -27,7 +27,6 @@ const PDFViewer = ({ pdfFile, fileName }) => {
     return (
       <div className="pdf-viewer">
         <div className="pdf-error">
-          <div className="error-icon">⚠️</div>
           <p>{error}</p>
         </div>
       </div>
@@ -58,7 +57,6 @@ const PDFViewer = ({ pdfFile, fileName }) => {
       </div>
 
       <div className="pdf-content">
-        {/* ✅ Use browser's native PDF viewer */}
         <iframe
           src={pdfUrl}
           width="100%"

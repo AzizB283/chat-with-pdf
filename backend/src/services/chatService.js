@@ -32,7 +32,7 @@ class ChatService {
       const relevantTexts = similarChunks.map((chunk) => chunk.metadata.text);
       const context = relevantTexts.join("\n\n");
 
-      // Create prompt for Gemini
+      // prompt for Gemini
       const prompt = `
 Based on the following context from a document, please answer the user's question. Use only the information provided in the context. If the answer cannot be found in the context, please say so clearly.
 
@@ -45,7 +45,6 @@ Please provide a helpful and accurate answer based only on the context provided:
 
       console.log("Sending request to Gemini...");
 
-      // Generate response using Gemini
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const answer = response.text();
@@ -63,7 +62,6 @@ Please provide a helpful and accurate answer based only on the context provided:
     } catch (error) {
       console.error("Error processing query:", error);
 
-      // Return a more user-friendly error
       return {
         answer: `I encountered an error while processing your question: ${error.message}. Please try again with a different question.`,
         sources: []
@@ -72,5 +70,4 @@ Please provide a helpful and accurate answer based only on the context provided:
   }
 }
 
-// ✅ IMPORTANT: Export an instance of the class, not the class itself
 module.exports = new ChatService();
