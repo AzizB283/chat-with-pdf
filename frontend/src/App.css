@@ -1,0 +1,90 @@
+.App {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* ✅ Upload interface styling */
+.upload-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  color: white;
+}
+
+.header h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.upload-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+}
+
+/* ✅ Two-column layout with minimal padding */
+.app-layout {
+  display: grid;
+  grid-template-columns: 1fr 50%;
+  height: 100vh;
+  padding: 10px;
+  gap: 10px;
+  background: #f8f9fa;
+}
+
+.pdf-column {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chat-column {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ✅ Mobile responsive */
+@media (max-width: 1024px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 60vh 1fr;
+    padding: 5px;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .header p {
+    font-size: 1rem;
+  }
+  
+  .upload-section {
+    padding: 20px;
+  }
+}
