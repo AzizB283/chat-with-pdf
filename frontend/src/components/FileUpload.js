@@ -113,8 +113,6 @@ const FileUpload = ({ onDocumentUploaded }) => {
             <input {...getInputProps()} />
 
             <div className="dropzone-content">
-              <div className="upload-icon">📎</div>
-
               {uploading ? (
                 <div className="upload-progress">
                   <div className="spinner"></div>

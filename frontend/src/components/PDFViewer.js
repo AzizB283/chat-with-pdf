@@ -51,9 +51,6 @@ const PDFViewer = ({ pdfFile, fileName }) => {
           <span className="pdf-icon">📄</span>
           <span className="pdf-name">{fileName}</span>
         </div>
-        <div className="pdf-info">
-          <span>Using browser's built-in PDF viewer</span>
-        </div>
       </div>
 
       <div className="pdf-content">

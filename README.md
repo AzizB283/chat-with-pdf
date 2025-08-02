@@ -17,7 +17,6 @@ Before running this application, you need to obtain API keys from:
 
 1. **Google AI (Gemini)**: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. **Pinecone**: Sign up at [Pinecone](https://www.pinecone.io/) and get your API key
-3. **OpenAI**: Get your API key from [OpenAI](https://platform.openai.com/api-keys) (for embeddings)
 
 ## Installation
 
