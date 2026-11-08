@@ -6,6 +6,7 @@ const fs = require("fs");
 require("dotenv").config();
 
 const pdfService = require("./services/pdfService");
+const markdownService = require("./services/markdownService");
 const vectorService = require("./services/vectorService");
 const chatService = require("./services/chatService");
 const rateLimit = require("express-rate-limit");
@@ -55,88 +56,148 @@ const storage = multer.diskStorage({
   }
 });
 
+const MAX_FILES = 10;
+const MAX_FILE_SIZE_MB = 50;
+const PDF_EXTENSIONS = [".pdf"];
+const MARKDOWN_EXTENSIONS = [".md", ".markdown"];
+
+const getFileType = (fileName) => {
+  const ext = path.extname(fileName).toLowerCase();
+  if (PDF_EXTENSIONS.includes(ext)) return "pdf";
+  if (MARKDOWN_EXTENSIONS.includes(ext)) return "markdown";
+  return null;
+};
+
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB limit
+    fileSize: MAX_FILE_SIZE_MB * 1024 * 1024, // per file
+    files: MAX_FILES
   },
   fileFilter: function (req, file, cb) {
-    if (file.mimetype === "application/pdf") {
+    // Check the extension: browsers report inconsistent MIME types for Markdown
+    if (getFileType(file.originalname)) {
       cb(null, true);
     } else {
-      cb(new Error("Only PDF files are allowed!"), false);
+      cb(new Error("Only PDF and Markdown (.md) files are allowed"), false);
     }
   }
 });
 
-// Routes
-app.post("/api/upload", upload.single("pdf"), async (req, res) => {
-  let filePath = null;
+const extractText = async (file) => {
+  switch (getFileType(file.originalname)) {
+    case "pdf":
+      return pdfService.extractTextFromPDF(file.path);
+    case "markdown":
+      return markdownService.extractTextFromMarkdown(file.path);
+    default:
+      throw new Error("Unsupported file type");
+  }
+};
 
+const removeFile = (filePath) => {
   try {
-    if (!req.file) {
+    if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch (err) {
+    console.error("Cleanup error:", err);
+  }
+};
+
+const uploadErrorMessage = (err) => {
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return `Each file must be ${MAX_FILE_SIZE_MB}MB or smaller`;
+  }
+  if (err.code === "LIMIT_FILE_COUNT" || err.code === "LIMIT_UNEXPECTED_FILE") {
+    return `You can upload up to ${MAX_FILES} files at once`;
+  }
+  return err.message;
+};
+
+// Routes
+
+// Accepts one or more PDF / Markdown files in the "files" field.
+// Each file is processed on its own, so one bad file doesn't fail the rest.
+app.post("/api/upload", (req, res) => {
+  upload.array("files", MAX_FILES)(req, res, async (uploadError) => {
+    if (uploadError) {
+      (req.files || []).forEach((f) => removeFile(f.path));
+      return res.status(400).json({ error: uploadErrorMessage(uploadError) });
+    }
+
+    const files = req.files || [];
+    if (files.length === 0) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    filePath = req.file.path;
-    const fileName = req.file.originalname;
+    const documents = [];
+    const errors = [];
 
-    console.log(`Processing PDF: ${fileName}`);
-
-    // File validation
-    const stats = fs.statSync(filePath);
-    if (stats.size === 0) {
-      return res.status(400).json({ error: "Uploaded file is empty" });
-    }
-
-    // Extract text from PDF
-    const extractedText = await pdfService.extractTextFromPDF(filePath);
-
-    fs.unlinkSync(filePath);
-    filePath = null; // Mark as cleaned up
-
-    // Process and store in vector database
-    const documentId = await vectorService.processAndStoreDocument(
-      fileName,
-      extractedText
-    );
-
-    res.json({
-      success: true,
-      documentId: documentId,
-      fileName: fileName,
-      textLength: extractedText.length,
-      message: "PDF processed successfully"
-    });
-  } catch (error) {
-    console.error("Upload error:", error);
-
-    if (filePath && fs.existsSync(filePath)) {
+    for (const file of files) {
+      const fileName = file.originalname;
       try {
-        fs.unlinkSync(filePath);
-      } catch (cleanupError) {
-        console.error("Cleanup error:", cleanupError);
+        console.log(`Processing file: ${fileName}`);
+
+        if (file.size === 0) {
+          throw new Error("File is empty");
+        }
+
+        const extractedText = await extractText(file);
+        removeFile(file.path);
+
+        const documentId = await vectorService.processAndStoreDocument(
+          fileName,
+          extractedText
+        );
+
+        documents.push({
+          documentId,
+          fileName,
+          fileType: getFileType(fileName),
+          textLength: extractedText.length
+        });
+      } catch (error) {
+        console.error(`Upload error for ${fileName}:`, error);
+        removeFile(file.path);
+        errors.push({ fileName, error: error.message });
       }
     }
 
-    res.status(500).json({
-      error: "Server error during upload processing",
-      details: error.message
-    });
-  }
-});
-
-app.post("/api/chat", async (req, res) => {
-  try {
-    const { message, documentId } = req.body;
-
-    if (!message || !documentId) {
-      return res
-        .status(400)
-        .json({ error: "Message and documentId are required" });
+    if (documents.length === 0) {
+      return res.status(500).json({
+        error:
+          errors.length === 1
+            ? errors[0].error
+            : "None of the files could be processed",
+        errors
+      });
     }
 
-    const response = await chatService.processQuery(message, documentId);
+    res.json({
+      success: true,
+      documents,
+      errors,
+      message: `${documents.length} file(s) processed successfully`
+    });
+  });
+});
+
+// Body: { message, documentIds: [...] }  (a single documentId is also accepted)
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message, documentId, documentIds } = req.body;
+    const ids = Array.isArray(documentIds)
+      ? documentIds.filter(Boolean)
+      : documentId
+      ? [documentId]
+      : [];
+
+    if (!message || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Message and at least one documentId are required" });
+    }
+
+    const response = await chatService.processQuery(message, ids);
 
     res.json({
       success: true,

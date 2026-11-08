@@ -178,7 +178,9 @@ class VectorService {
     return vectors;
   }
 
-  async searchSimilarChunks(query, documentId, topK = 5) {
+  // documentIds: a single id or an array of ids to search across
+  async searchSimilarChunks(query, documentIds, topK = 5) {
+    const ids = Array.isArray(documentIds) ? documentIds : [documentIds];
     try {
       const queryEmbedding = await this.getEmbedding(query);
       const index = this.pinecone.index(this.indexName);
@@ -186,7 +188,10 @@ class VectorService {
       const searchResponse = await index.query({
         vector: queryEmbedding,
         topK: topK,
-        filter: { documentId: documentId },
+        filter:
+          ids.length === 1
+            ? { documentId: ids[0] }
+            : { documentId: { $in: ids } },
         includeMetadata: true
       });
 
