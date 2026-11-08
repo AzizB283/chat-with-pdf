@@ -52,7 +52,7 @@ class PDFService {
   // split text
   splitTextIntoChunks(text, maxChunkSize = 800, overlap = 100) {
     const chunks = [];
-    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
+    const sentences = text.split(/[.!?]+|\n+/).filter((s) => s.trim().length > 0);
 
     let currentChunk = "";
     let currentSize = 0;

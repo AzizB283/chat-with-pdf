@@ -7,17 +7,21 @@ class ChatService {
     this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
   }
 
-  async processQuery(userQuery, documentId) {
+  // documentIds: one id or an array of ids; the search runs across all of them
+  async processQuery(userQuery, documentIds) {
+    const ids = Array.isArray(documentIds) ? documentIds : [documentIds];
+    const multiple = ids.length > 1;
+
     try {
       console.log(
-        `Processing query: "${userQuery}" for document: ${documentId}`
+        `Processing query: "${userQuery}" across ${ids.length} document(s)`
       );
 
-      // Search for relevant chunks in the document
+      // Search for relevant chunks in the selected documents
       const similarChunks = await vectorService.searchSimilarChunks(
         userQuery,
-        documentId,
-        5
+        ids,
+        multiple ? 8 : 5
       );
 
       if (similarChunks.length === 0) {
@@ -28,13 +32,23 @@ class ChatService {
         };
       }
 
-      // Extract text from similar chunks
-      const relevantTexts = similarChunks.map((chunk) => chunk.metadata.text);
-      const context = relevantTexts.join("\n\n");
+      // Label each passage with its file so the answer can name the right document
+      const context = similarChunks
+        .map(
+          (chunk) =>
+            `[Source: ${chunk.metadata.fileName}]\n${chunk.metadata.text}`
+        )
+        .join("\n\n");
 
       // prompt for Gemini
       const prompt = `
-Based on the following context from a document, please answer the user's question. Use only the information provided in the context. If the answer cannot be found in the context, please say so clearly.
+Based on the following context from ${
+        multiple ? "the user's documents" : "a document"
+      }, please answer the user's question. Use only the information provided in the context. If the answer cannot be found in the context, please say so clearly.${
+        multiple
+          ? " When information comes from a specific file, mention the file name."
+          : ""
+      } You may use Markdown (bold text, bullet lists) to format the answer.
 
 Context:
 ${context}
@@ -56,7 +70,9 @@ Please provide a helpful and accurate answer based only on the context provided:
         sources: similarChunks.map((chunk) => ({
           text: chunk.metadata.text.substring(0, 200) + "...",
           score: chunk.score,
-          chunkIndex: chunk.metadata.chunkIndex
+          chunkIndex: chunk.metadata.chunkIndex,
+          fileName: chunk.metadata.fileName,
+          documentId: chunk.metadata.documentId
         }))
       };
     } catch (error) {
